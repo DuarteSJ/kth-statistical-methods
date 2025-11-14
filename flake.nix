@@ -27,6 +27,7 @@
                     (python.withPackages (p: [
                         # Exta Python:
                         p.numpy
+                        p.scipy
                         # p.pandas
                         p.matplotlib
                         p.seaborn
