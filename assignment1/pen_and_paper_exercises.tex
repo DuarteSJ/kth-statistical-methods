@@ -1,0 +1,210 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+
+\title{Paper and Pen Exercises: Solutions}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+\setcounter{subsection}{0}
+
+\renewcommand{\thesection}{3.\arabic{section}}
+
+\section{Deriving the Log-Normal pdf using the transformation theorem}
+
+\subsection{Problem Statement}
+Using the Gaussian pdf $p(x) = \mathcal{N}(x|\mu, \sigma^2)$ as base distribution and the exponential function as bijective mapping, derive the Log-Normal pdf using the transformation theorem.
+
+\subsection{Solution}
+
+Let $X \sim \mathcal{N}(\mu, \sigma^2)$ be a normally distributed random variable with pdf:
+\[
+p_X(x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right), \quad x \in \mathbb{R}
+\]
+
+We apply the bijective transformation $Y = g(X) = e^X$, which maps $\mathbb{R} \to \mathbb{R}^+$.
+
+The inverse transformation is $X = g^{-1}(Y) = \ln(Y)$.
+
+By the transformation theorem, the pdf of $Y$ is:
+\[
+p_Y(y) = p_X(g^{-1}(y)) \left| \frac{d}{dy} g^{-1}(y)\right|
+\]
+
+Computing the derivative:
+\[
+\frac{d}{dy} \ln(y) = \frac{1}{y}
+\]
+
+Therefore:
+\[
+p_Y(y) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left(-\frac{(\ln(y)-\mu)^2}{2\sigma^2}\right) \cdot \frac{1}{y}, \quad y > 0
+\]
+
+This is the Log-Normal distribution:
+\[
+\boxed{p_Y(y) = \frac{1}{y\sigma\sqrt{2\pi}} \exp\left(-\frac{(\ln(y)-\mu)^2}{2\sigma^2}\right), \quad y > 0}
+\]
+
+\subsection{Interpretation}
+The Log-Normal distribution describes a random variable whose logarithm is normally distributed. The factor $1/y$ arises from the Jacobian of the transformation and ensures proper normalization. This distribution is widely used to model positive quantities that arise from multiplicative processes, such as stock prices, income distributions, and particle sizes.
+
+\section{Exact marginal likelihood inference (Burglars and earthquakes)}
+
+\subsection{Problem Setup}
+
+We have binary variables: $a$ (alarm ringing), $e$ (earthquake), $b$ (burglary), $c$ (phone call), $r$ (radio report).
+
+The joint probability factorizes as:
+\[
+p(a,b,e,c,r) = p(b)p(e)p(a|b,e)p(r|e)p(c|a)
+\]
+
+Given probabilities:
+\begin{itemize}
+    \item $p(e=1) = \epsilon = \frac{1}{3}$ (earthquake every third year)
+    \item $p(b=1) = \beta = \frac{1}{2}$ (burglary every second year)
+\item $\alpha_b = 0.99$ (alarm recall for burglary)
+\item $\alpha_e = 0.01$ (alarm triggered by earthquake)
+\item $f = 0.001$ (false alarm rate)
+\end{itemize}
+
+\subsection{Conditional Probability Table for $p(a|b,e)$}
+
+The alarm can ring due to: burglary (with probability $\alpha_b$), earthquake (with probability $\alpha_e$), or other reasons (with probability $f$). Assuming these are independent triggering mechanisms:
+
+\begin{align*}
+p(a=0|b=0,e=0) &= (1-f) = 0.999\\
+p(a=1|b=0,e=0) &= f = 0.00100\\
+p(a=0|b=0,e=1) &= (1-\alpha_e)(1-f) = (0.99)(0.999) \approx 0.98901\\
+p(a=1|b=0,e=1) &= 1 - p(a=0|b=0,e=1) = 0.01099\\
+p(a=0|b=1,e=0) &= (1-\alpha_b)(1-f) = (0.01)(0.999) \approx 0.00999\\
+p(a=1|b=1,e=0) &= 1 - p(a=0|b=1,e=0) = 0.99001\\
+p(a=0|b=1,e=1) &= (1-\alpha_b)(1-\alpha_e)(1-f) = (0.01)(0.99)(0.999) \approx 0.00989\\
+p(a=1|b=1,e=1) &= 1 - p(a=0|b=1,e=1) = 0.99011\\
+\end{align*}
+
+\subsection{Deriving $p(b,e|a=1)$}
+
+Using \textbf{Bayes' theorem}:
+\[
+p(b,e|a=1) = \frac{p(a=1|b,e)p(b)p(e)}{p(a=1)}
+\]
+
+We need to compute $p(a=1)$ using the \textbf{law of total probability}:
+\begin{align*}
+p(a=1) &= \sum_{b \in \{0,1\}} \sum_{e \in \{0,1\}} p(a=1|b,e)p(b)p(e)\\
+       &= p(a=1|b=0,e=0)p(b=0)p(e=0) + p(a=1|b=0,e=1)p(b=0)p(e=1)\\
+       &\quad + p(a=1|b=1,e=0)p(b=1)p(e=0) + p(a=1|b=1,e=1)p(b=1)p(e=1)\\
+       &= 0.00100 \cdot \frac{1}{2} \cdot \frac{2}{3} + 0.01099 \cdot \frac{1}{2} \cdot \frac{1}{3} + 0.99001 \cdot \frac{1}{2} \cdot \frac{2}{3} + 0.99011 \cdot \frac{1}{2} \cdot \frac{1}{3}\\
+       &\approx 0.49719
+\end{align*}
+
+Therefore, the posterior distribution is:
+\begin{align*}
+p(b=0,e=0|a=1) &= \frac{0.00100 \cdot \frac{1}{2} \cdot \frac{2}{3}}{0.49719} \approx 0.00067\\
+p(b=0,e=1|a=1) &= \frac{0.01099 \cdot \frac{1}{2} \cdot \frac{1}{3}}{0.49719} \approx 0.00368\\
+p(b=1,e=0|a=1) &= \frac{0.99001 \cdot \frac{1}{2} \cdot \frac{2}{3}}{0.49719} \approx 0.66374\\
+p(b=1,e=1|a=1) &= \frac{0.99011 \cdot \frac{1}{2} \cdot \frac{1}{3}}{0.49719} \approx 0.33190\\
+\end{align*}
+
+\subsection{Computing $p(b=1|e=1,a=1)$}
+
+Using \textbf{Bayes' theorem}:
+\[
+p(b=1|e=1,a=1) = \frac{p(a=1|b=1,e=1)p(b=1)p(e=1)}{p(a=1,e=1)}
+\]
+
+First, we compute $p(a=1,e=1)$ using the \textbf{law of total probability}:
+\begin{align*}
+p(a=1,e=1) &= \sum_{b \in \{0,1\}} p(a=1|b,e=1)p(b)p(e=1)\\
+&= p(a=1|b=0,e=1)p(b=0)p(e=1) + p(a=1|b=1,e=1)p(b=1)p(e=1)\\
+&= 0.01099 \cdot \frac{1}{2} \cdot \frac{1}{3} + 0.99011 \cdot \frac{1}{2} \cdot \frac{1}{3}\\
+&\approx 0.16685
+\end{align*}
+
+Therefore:
+\[
+    \boxed{p(b=1|e=1,a=1) = \frac{0.99011 \cdot \frac{1}{2} \cdot \frac{1}{3}}{0.16685} \approx 0.98902}
+\]
+
+\subsection{Interpretation}
+Given that the alarm is ringing and there was an earthquake, the probability of a burglary is approximately 98.9\%. This high probability is due to the alarm's high recall for burglaries ($\alpha_b = 0.99$) and relatively low false positive rate from earthquakes alone.
+
+\section{Posterior Predictive for Dirichlet-Multinomial}
+
+\subsection{(i) Predicting the next observation}
+
+We observe 2000 samples where "e" appears 260 times. We have a Dirichlet prior $\theta \sim \text{Dir}(\alpha_1, \ldots, \alpha_{27})$ with $\alpha_k = 10$ for all $k$.
+
+Let $n_e = 260$ be the count of ``e'' and $n = 2000$ be the total number of observations.
+
+The posterior predictive distribution is obtained by marginalizing over the parameter $\theta$:
+
+\[
+p(x_{2001} = e \mid D) = \int p(x_{2001} = e \mid \theta) p(\theta \mid D) \, d\theta
+\]
+
+where:
+\begin{itemize}
+    \item The likelihood is: $p(x_{2001} = e \mid \theta) = \theta_e$
+    \item The posterior is: $p(\theta \mid D) = \text{Dir}(\alpha_1 + n_1, \ldots, \alpha_{27} + n_{27})$
+\end{itemize}
+
+Therefore:
+\[
+p(x_{2001} = e \mid D) = \int \theta_e \cdot \text{Dir}(\theta \mid \alpha_1 + n_1, \ldots, \alpha_{27} + n_{27}) \, d\theta
+\]
+
+This integral equals the expected value of $\theta_e$ under the posterior Dirichlet distribution:
+\[
+p(x_{2001} = e \mid D) = \mathbb{E}[\theta_e \mid D] = \frac{\alpha_e + n_e}{\sum_{k=1}^{27} (\alpha_k + n_k)}
+\]
+
+Since $\sum_{k=1}^{27} n_k = n = 2000$ and $\sum_{k=1}^{27} \alpha_k = 27 \cdot 10 = 270$:
+
+\[
+p(x_{2001} = e \mid D) = \frac{\alpha_e + n_e}{n + \sum_{k=1}^{27} \alpha_k} = \frac{10 + 260}{2000 + 270} = \frac{270}{2270}
+\]
+
+Therefore:
+\[
+\boxed{p(x_{2001} = e \mid D) = \frac{270}{2270} \approx 0.11894}
+\]
+
+\subsection{(ii) Joint prediction for two observations}
+
+We observe: "e" 260 times, "a" 100 times, "p" 87 times, in 2000 samples.
+
+For the joint posterior predictive, we use the chain rule:
+\[
+p(x_{2001} = e, x_{2002} = a \mid D) = p(x_{2001} = e \mid D) \cdot p(x_{2002} = a \mid D, x_{2001} = e)
+\]
+
+\textbf{First prediction (same as above):}
+\[
+p(x_{2001} = e \mid D) = \frac{270}{2270}
+\]
+
+\textbf{Second prediction:} After observing $x_{2001} = e$, we update our dataset to have $n_e + 1 = 261$ observations of ``e'' and $n + 1 = 2001$ total observations:
+\[
+p(x_{2002} = a \mid D, x_{2001} = e) = \frac{100 + 10}{2001 + 270} = \frac{110}{2271}
+\]
+
+\textbf{Joint probability:}
+\[
+\boxed{p(x_{2001} = e, x_{2002} = a \mid D) = \frac{270}{2270} \cdot \frac{110}{2271} = \frac{29700}{5155170} \approx 0.00576}
+\]
+
+\subsection{Interpretation}
+The posterior predictive distribution incorporates both the observed data and the prior. The Dirichlet prior with $\alpha_k = 10$ acts as pseudo-counts, providing smoothing. After 2000 observations, the data dominates, but the prior prevents zero probabilities for unseen events and provides regularization for rare events.
+
+The key insight is that the posterior predictive expectation equals the posterior mean of $\theta_e$, which interpolates between the prior mean and the empirical frequency based on the effective sample sizes.
+
+\end{document}
